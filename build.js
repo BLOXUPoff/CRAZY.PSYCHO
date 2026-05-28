@@ -19,6 +19,7 @@ const pfpAliases = ['pfp.jpg', 'photo de profil.jpg', 'photo-de-profil.jpg'];
 const pfpSrc = pfpAliases.find((f) => fs.existsSync(path.join(__dirname, f)));
 if (pfpSrc) {
     fs.copyFileSync(path.join(__dirname, pfpSrc), path.join(outDir, 'pfp.jpg'));
+    fs.copyFileSync(path.join(__dirname, pfpSrc), path.join(__dirname, 'api', 'pfp-data.jpg'));
 }
 
 for (const file of ['doxbinred.jpg']) {
