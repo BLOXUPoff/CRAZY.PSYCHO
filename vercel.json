@@ -1,0 +1,10 @@
+{
+  "buildCommand": "npm run build",
+  "outputDirectory": "public",
+  "functions": {
+    "api/telegram.js": {
+      "memory": 128,
+      "maxDuration": 15
+    }
+  }
+}

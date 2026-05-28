@@ -1,0 +1,7 @@
+{
+  "name": "profile-page",
+  "private": true,
+  "scripts": {
+    "build": "node build.js"
+  }
+}
