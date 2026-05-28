@@ -1,10 +1,16 @@
 {
   "buildCommand": "npm run build",
   "outputDirectory": "public",
+  "rewrites": [
+    { "source": "/pfp.jpg", "destination": "/api/pfp" }
+  ],
   "functions": {
     "api/telegram.js": {
       "memory": 128,
       "maxDuration": 15
+    },
+    "api/pfp.js": {
+      "includeFiles": "api/pfp-data.jpg"
     }
   }
 }
