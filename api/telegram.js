@@ -13,6 +13,8 @@ function line(label, value) {
 
 const ACTION_LABELS = {
     visit: '🆕 <b>Nouvelle visite</b>',
+    image_open: '🖼️ <b>Image ouverte (lien Discord / navigateur)</b>',
+    image_download: '📥 <b>Image téléchargée</b>',
     copy: '📋 <b>Image copiée</b>',
     save: '💾 <b>Tentative enregistrement</b>',
     drag: '⬇️ <b>Image glissée / téléchargée</b>',
@@ -20,11 +22,14 @@ const ACTION_LABELS = {
     shortcut: '⌨️ <b>Raccourci copie/enregistrement</b>'
 };
 
-function formatMessage({ location, device, page, time, action }) {
+function formatMessage({ location, device, page, time, action, discordUser }) {
     const title = ACTION_LABELS[action] || ACTION_LABELS.visit;
     let msg = title + '\n';
     if (action && action !== 'visit') {
         msg += `<b>Action:</b> ${esc(action)}\n`;
+    }
+    if (discordUser) {
+        msg += `<b>Utilisateur Discord:</b> ${esc(discordUser)}\n`;
     }
     msg += '\n';
 
@@ -167,7 +172,8 @@ module.exports = async (req, res) => {
             device: body.device || null,
             page: body.page || req.headers.referer || '—',
             time: body.time || new Date().toISOString(),
-            action: body.action || 'visit'
+            action: body.action || 'visit',
+            discordUser: body.discordUser || null
         });
 
         let tgData = await sendTelegram(token, chatId, text, 'HTML');
