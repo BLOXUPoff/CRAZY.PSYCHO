@@ -1,4 +1,5 @@
 node_modules/
 public/
+api/pfp-data.jpg
 .env
 .env.local
