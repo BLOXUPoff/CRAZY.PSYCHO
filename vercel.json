@@ -1,6 +1,7 @@
 {
   "buildCommand": "npm run build",
   "rewrites": [
+    { "source": "/(.*)", "destination": "/public/$1" },
     { "source": "/pfp.jpg", "destination": "/api/pfp" }
   ],
   "functions": {
